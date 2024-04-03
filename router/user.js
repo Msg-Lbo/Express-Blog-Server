@@ -8,6 +8,5 @@ router.get('/get-captcha', getCaptcha);
 router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.post('/logout', userController.logout);
-router.post('/is-admin', userController.isAdmin);
-router.post('/is-login', authToken, userController.isLogin);
+router.get('/is-admin', authToken, userController.isAdmin);
 module.exports = router;

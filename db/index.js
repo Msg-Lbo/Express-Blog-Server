@@ -1,11 +1,12 @@
 const mysql = require('mysql2/promise');
-
+const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_ROOT } = process.env
 // 创建数据库连接池
 const pool = mysql.createPool({
-    host: '127.0.0.1',
-    user: 'blog',
-    password: '141444',
-    database: 'blog',
+    host: DB_HOST,
+    port: DB_PORT,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_ROOT,
     // 连接池最大连接数
     connectionLimit: 10,
     // 是否等待连接池获得连接，为true时，如果没有连接，则不执行查询操作

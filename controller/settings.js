@@ -1,8 +1,4 @@
 const query = require('../db');
-const fs = require('fs');
-const path = require('path');
-const filePath = path.resolve(__dirname, '../smtp/config.json');
-const config = require('../smtp/config.json');
 // 保存设置
 exports.saveSettings = async (req, res) => {
     try {
@@ -62,63 +58,6 @@ exports.getSettings = async (req, res) => {
             succeed: true,
             data: data
         });
-    } catch (err) {
-        console.log(err);
-        return res.json({
-            code: 500,
-            msg: '服务端错误'
-        })
-    }
-}
-
-// 获取邮件设置
-exports.getMailSettings = async (req, res) => {
-    try {
-        if (config) {
-            // 敏感信息使用Md5加密
-            const data = {
-                host: config.host,
-                port: config.port,
-                user: config.user,
-            }
-            return res.json({
-                code: 200,
-                msg: '获取成功',
-                succeed: true,
-                data: data
-            });
-        }
-    } catch (err) {
-        console.log(err);
-        return res.json({
-            code: 500,
-            msg: '服务端错误'
-        })
-    }
-}
-
-// 保存邮件设置
-exports.saveMailSettings = async (req, res) => {
-    try {
-        const {
-            host,
-            port,
-            user,
-            pass
-        } = req.body;
-        // 写入配置文件
-        const data = {
-            host,
-            port,
-            user,
-            pass
-        }
-        fs.writeFileSync(filePath, JSON.stringify(data));
-        return res.json({
-            code: 200,
-            msg: '保存成功',
-            succeed: true
-        })
     } catch (err) {
         console.log(err);
         return res.json({

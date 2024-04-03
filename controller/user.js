@@ -2,7 +2,7 @@ const query = require('../db');
 const sendMail = require('../utils/sendEmail');
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-
+const { TOKEN_SECRET } = process.env
 // 获取所有用户
 exports.getAllUser = async (req, res) => {
     try {
@@ -135,9 +135,10 @@ exports.login = async (req, res) => {
             nickname: result[0].nickname
         }
         // 生成token
-        const token = jwt.sign(user, "CNMB@!#3+2-5dy0", { expiresIn: '1h' });
+        const token = jwt.sign(user, TOKEN_SECRET, { expiresIn: '1h' });
         // token存入cookie //, sameSite: "none", secure: true 
-        res.cookie('token', token, { httpOnly: true, maxAge: 60 * 60 * 1000, sameSite: "none", secure: true });
+        // res.cookie('token', token, { httpOnly: true, maxAge: 60 * 60 * 1000, sameSite: "none", secure: true });
+        req.session.token = token;
         return res.json({
             code: 200,
             msg: '登陆成功',
@@ -168,58 +169,12 @@ exports.logout = async (req, res) => {
         succeed: true
     })
 }
-// 是否管理员
-exports.isAdmin = async (req, res) => {
-    const { account } = req.body
-    // 信息是否为空
-    if (!account) {
-        return res.json({
-            code: 400,
-            msg: '请先登陆'
-        })
-    }
-    try {
-        const sql = `select * from user where account = '${account}'`
-        const [rows] = await query(sql)
-        if (rows.length !== 1) {
-            return res.json({
-                code: 400,
-                msg: '获取信息失败'
-            })
-        }
-        if (rows[0].identity === '管理员') {
-            return res.json({
-                code: 200,
-                msg: '管理员',
-                succeed: true,
-                data: {
-                    identity: rows[0].identity
-                }
-            })
-        }
-        if (rows[0].identity === '游客') {
-            return res.json({
-                code: 200,
-                msg: '游客',
-                succeed: true,
-                data: {
-                    identity: rows[0].identity
-                }
-            })
-        }
-    } catch (error) {
-        console.log('服务端错误：', error);
-        return res.json({
-            code: 500,
-            msg: '服务器错误'
-        })
-    }
-}
+
 // 登陆是否过期
-exports.isLogin = async (req, res) => {
+exports.isAdmin = async (req, res) => {
     return res.json({
         code: 200,
-        msg: '登陆未过期',
+        msg: true,
         succeed: true
     })
 }

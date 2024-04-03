@@ -1,12 +1,12 @@
 const nodemailer = require('nodemailer');
-const config = require('./config.json');
+const { EMAIL_SERVICE, EMAIL_USER, EMAIL_PORT, EMAIL_PASS } = process.env
 const nodeMail = nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
+    host: EMAIL_SERVICE,
+    port: EMAIL_PORT,
     secure: true,
     auth: {
-        user: config.user,
-        pass: config.pass
+        user: EMAIL_USER,
+        pass: EMAIL_PASS
     }
 });
 

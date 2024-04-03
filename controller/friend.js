@@ -2,41 +2,72 @@ const query = require('../db');
 const GenId = require('../utils/genid');
 const genid = new GenId({ WorkerId: 1 });
 const sendMail = require('../utils/sendEmail');
+const jwt = require("jsonwebtoken");
+const { TOKEN_SECRET } = process.env
+
+function validateParams(...params) {
+    return params.every(param => param);
+}
+
 // 申请友链
 exports.applyFriend = async (req, res) => {
     const { name, link, email, description, logo, code } = req.body;
-    if (!name || !link || !email || !description || !logo || !code) {
-        return res.json({
-            code: 400,
-            msg: '参数不完整'
-        });
-    }
     try {
+        const token = req.session.token;
+        // console.log(token);
+        const decodedToken = jwt.verify(token, TOKEN_SECRET);
+
+        if (decodedToken.identity === 'admin') {
+            if (!validateParams(name, link, email, description, logo)) {
+                return res.json({
+                    code: 400,
+                    msg: '参数不完整'
+                });
+            }
+            const id = genid.NextId();
+            const sql = 'insert into friends (id, name, link, email, description, logo) values (?, ?, ?, ?, ?, ?)';
+            const [result] = await query(sql, [id, name, link, email, description, logo]);
+            if (result.affectedRows) {
+                return res.json({
+                    code: 200,
+                    msg: '申请成功',
+                    succeed: true
+                });
+            }
+            return res.json({
+                code: 400,
+                msg: '申请失败'
+            });
+        }
+
+        if (!validateParams(name, link, email, description, logo, code)) {
+            return res.json({
+                code: 400,
+                msg: '参数不完整'
+            });
+        }
         const sessionCaptcha = req.session.captcha;
-        console.log(sessionCaptcha);
-        // 判断session中是否有验证码
         if (!sessionCaptcha) {
             return res.json({
                 code: 400,
                 msg: '请获取验证码'
             });
         }
-        // 判断邮箱是否正确
+
         if (!sessionCaptcha[email]) {
             return res.json({
                 code: 400,
                 msg: '邮箱错误'
             });
         }
+
         const { captcha, expires } = sessionCaptcha[email];
-        // 判断验证码是否正确
         if (code !== captcha) {
             return res.json({
                 code: 400,
                 msg: '验证码错误'
             });
         }
-        // 判断验证码是否过期
 
         if (Date.now() > expires) {
             return res.json({
@@ -44,7 +75,7 @@ exports.applyFriend = async (req, res) => {
                 msg: '验证码已过期，请重新获取'
             });
         }
-        // 生成友链id
+
         const id = genid.NextId();
         const sql = 'insert into friends (id, name, link, email, description, logo) values (?, ?, ?, ?, ?, ?)';
         const [result] = await query(sql, [id, name, link, email, description, logo]);
@@ -64,9 +95,12 @@ exports.applyFriend = async (req, res) => {
         return res.json({
             code: 500,
             msg: '服务端错误'
-        })
+        });
     }
 }
+
+
+
 // 允许友链
 exports.allowFriend = async (req, res) => {
     const { id } = req.body;
@@ -80,7 +114,7 @@ exports.allowFriend = async (req, res) => {
         // 获取id对应的友链信息
         const sql1 = 'select email from friends where id=?';
         const [result1] = await query(sql1, [id]);
-        console.log(result1[0].email);
+        // console.log(result1[0].email);
         const sql = 'update friends set status=1 where id=?';
         const [result] = await query(sql, [id]);
         if (result.affectedRows) {
@@ -116,18 +150,18 @@ exports.refuseFriend = async (req, res) => {
         // 获取id对应的友链信息
         const sql1 = 'select email from friends where id=?';
         const [result1] = await query(sql1, [id]);
-        console.log(result1[0].email);
+        // console.log(result1[0].email);
         if (result1.length === 0) {
             return res.json({
                 code: 400,
                 msg: '邮箱不存在'
             });
         }
-        // 删除友链
-        const sql = 'delete from friends where id=?';
+        // 修改友链装状态填为0
+        const sql = 'update friends set status=0 where id=?';
         const [result] = await query(sql, [id]);
         if (result.affectedRows) {
-            sendMail(result1[0].email, "友链未通过", reason)
+            sendMail(result1[0].email, "友链被驳回", reason)
             return res.json({
                 code: 200,
                 msg: '已拒绝',
@@ -144,6 +178,37 @@ exports.refuseFriend = async (req, res) => {
             code: 500,
             msg: '服务端错误'
         })
+    }
+}
+// 删除友链
+exports.deleteFriend = async (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+        return res.json({
+            code: 400,
+            msg: '参数不完整'
+        });
+    }
+    try {
+        const sql = 'delete from friends where id=?';
+        const [result] = await query(sql, [id]);
+        if (result.affectedRows) {
+            return res.json({
+                code: 200,
+                msg: '删除成功',
+                succeed: true
+            });
+        }
+        return res.json({
+            code: 400,
+            msg: '删除失败'
+        });
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '删除失败'
+        });
     }
 }
 // 获取已通过的友链

@@ -1,9 +1,10 @@
 
 const jwt = require("jsonwebtoken");
+const { TOKEN_SECRET } = process.env
 // 对请求中的cookie中的token进行验证
 const authToken = async (req, res, next) => {
     // 获取cookie中的token
-    const token = req.cookies.token;
+    const token = req.session.token;
     // 如果没有token
     if (!token) {
         return res.json({
@@ -13,12 +14,18 @@ const authToken = async (req, res, next) => {
     }
     // 如果有token
     try {
-        const decodedToken = jwt.verify(token, "CNMB@!#3+2-5dy0");
-        req.userId = decodedToken.userId;
         // 验证token
-        const decoded = jwt.verify(token, "CNMB@!#3+2-5dy0");
+        const decodedToken = jwt.verify(token, TOKEN_SECRET);
+        // req.userId = decodedToken.userId;
+        if (decodedToken.identity !== 'admin') {
+            return res.json({
+                code: 401,
+                msg: "权限不足",
+            });
+        }
+
         // 如果token过期
-        if (decoded.exp <= Date.now() / 1000) {
+        if (decodedToken.exp <= Date.now() / 1000) {
             return res.json({
                 code: 400,
                 msg: "登录已过期",

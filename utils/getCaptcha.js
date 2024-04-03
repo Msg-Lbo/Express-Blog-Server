@@ -31,6 +31,7 @@ const getCaptcha = async (req, res) => {
                 expires
             }
         };
+        // console.log(req.session);
         return res.json({
             code: 200,
             msg: '验证码发送成功',

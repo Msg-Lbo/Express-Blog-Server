@@ -17,10 +17,10 @@ const sendMail = (to, subject, params) => {
             <p>您好！</p>
             <p>您的友链申请已通过,请前往网站查看详细</p>
             `
-    } else if (subject === "友链未通过") {
+    } else if (subject === "友链被驳回") {
         html = `
             <p>您好！</p>
-            <p>您的友链申请未通过</p>
+            <p>您的友链申请被驳回，请修改您的申请或者站点</p>
             <p>原因是: ${params}</p>
             `
     } else if (subject === "友链更新") {
