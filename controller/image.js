@@ -1,6 +1,6 @@
 const query = require('../db');
-const GenId = require('../utils/genid');
-const genid = new GenId({ WorkerId: 1 });
+const GenId = require('../utils/genId');
+const genId = new GenId({ WorkerId: 1 });
 const fs = require('fs');
 
 // 上传图片
@@ -30,10 +30,10 @@ exports.uploadImage = async (req, res) => {
             ret_urls.push(url);
             // 如果图片存在
             if (fs.existsSync('./public/uploads/' + filename)) {
-                const image_id = genid.NextId()
+                const image_id = genId.NextId()
                 // 将地址存入数据库
-                const sql = `insert into images (image_id, url, image_name) values ('${image_id}', '${url}', '${filename}')`;
-                const result = await query(sql);
+                const sql = `insert into images (image_id, url, image_name) values (?, ?, ?)`;
+                const result = await query(sql, [image_id, url, files[i].originalname]);
                 if (result.affectedRows === 0) {
                     return res.json({
                         code: 500,

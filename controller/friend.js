@@ -1,6 +1,6 @@
 const query = require('../db');
-const GenId = require('../utils/genid');
-const genid = new GenId({ WorkerId: 1 });
+const GenId = require('../utils/genId');
+const genId = new GenId({ WorkerId: 1 });
 const sendMail = require('../utils/sendEmail');
 const jwt = require("jsonwebtoken");
 const { TOKEN_SECRET } = process.env
@@ -24,7 +24,7 @@ exports.applyFriend = async (req, res) => {
                     msg: '参数不完整'
                 });
             }
-            const id = genid.NextId();
+            const id = genId.NextId();
             const sql = 'insert into friends (id, name, link, email, description, logo) values (?, ?, ?, ?, ?, ?)';
             const [result] = await query(sql, [id, name, link, email, description, logo]);
             if (result.affectedRows) {
@@ -76,7 +76,7 @@ exports.applyFriend = async (req, res) => {
             });
         }
 
-        const id = genid.NextId();
+        const id = genId.NextId();
         const sql = 'insert into friends (id, name, link, email, description, logo) values (?, ?, ?, ?, ?, ?)';
         const [result] = await query(sql, [id, name, link, email, description, logo]);
         if (result.affectedRows) {
@@ -98,9 +98,6 @@ exports.applyFriend = async (req, res) => {
         });
     }
 }
-
-
-
 // 允许友链
 exports.allowFriend = async (req, res) => {
     const { id } = req.body;
@@ -230,18 +227,11 @@ exports.getAllowFriends = async (req, res) => {
         });
     }
 }
-// 获取指定状态的友链
-exports.getFriendByStatus = async (req, res) => {
-    const { status } = req.query;
-    if (!status) {
-        return res.json({
-            code: 400,
-            msg: '参数不完整'
-        });
-    }
+// 获取全部友链
+exports.getAllFriend = async (req, res) => {
     try {
-        const sql = 'select * from friends where status=?';
-        const [result] = await query(sql, [status]);
+        const sql = 'select * from friends';
+        const [result] = await query(sql);
         return res.json({
             code: 200,
             msg: '获取成功',

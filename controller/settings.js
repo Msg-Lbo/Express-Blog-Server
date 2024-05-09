@@ -48,9 +48,13 @@ exports.getSettings = async (req, res) => {
             LogoText2: result[0].LogoText2,
             GongAn: result[0].GongAn,
             Ipc: result[0].Ipc,
+            Icp: result[0].Icp,
+            MoeIcp: result[0].MoeIcp,
             LeftBgLight: result[0].LeftBgLight,
             LeftBgDark: result[0].LeftBgDark,
-            AllowRegister: result[0].AllowRegister === 1 ? true : false
+            AllowRegister: result[0].AllowRegister === 1 ? true : false,
+            About: result[0].About,
+            FriendTemplate: result[0].FriendTemplate,
         }
         return res.json({
             code: 200,
@@ -64,5 +68,28 @@ exports.getSettings = async (req, res) => {
             code: 500,
             msg: '服务端错误'
         })
+    }
+}
+
+// 汇总数据，文章总数，阅读数，comments表总条数
+exports.getSummary = async (req, res) => {
+    try {
+        const sql = `SELECT
+        (SELECT COUNT(*) FROM articles) AS article_count,
+        (SELECT SUM(read_count) FROM articles) AS total_reads,
+        (SELECT COUNT(*) FROM comments) AS total_comments;`;
+        const [result] = await query(sql);
+        return res.json({
+            code: 200,
+            msg: '获取成功',
+            succeed: true,
+            data: result[0]
+        });
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '获取失败'
+        });
     }
 }

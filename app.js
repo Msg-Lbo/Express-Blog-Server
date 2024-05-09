@@ -5,18 +5,20 @@ const multer = require('multer');
 const session = require('express-session');
 const cookieParser = require('cookie-parser')
 const dotenv = require("dotenv")
+dotenv.config()
+const { HOST, PORT, SESSION_SECRET } = process.env
+
 const app = express();
-const { HOST, PORT } = process.env
 
 const corsOptions = {
-    origin: ['http://127.0.0.1:5173', 'http://localhost:3000', 'http://192.168.2.22:3000'],
+    origin: ['https://blog.ylmty.cc', 'http://127.0.0.1:5173', 'http://localhost:5173', 'http://192.168.31.20:5173'],
     methods: 'GET,POST',
     allowHeaders: 'Content-Type,Authorization',
     exposeHeaders: 'Content-length',
     credentials: true,
 }
 
-dotenv.config()
+
 app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -28,14 +30,14 @@ app.use(upload.any());
 app.use(express.static('./public'));
 app.use(cookieParser());
 app.use(session({
-    secret: 'CNMB@!#3+2-5dy0',
-    resave: false,
-    saveUninitialized: false,
+    secret: SESSION_SECRET, // 用来对 session id 进行签名
+    resave: false, // 是否每次都重新保存 session
+    saveUninitialized: true, // 是否自动保存未初始化的 session
     cookie: {
         maxAge: 60 * 60 * 1000,
         httpOnly: true,
-        secure: false, // 如果设置为true，那么只有在https中才会发送cookie
-        sameSite: "lax" // 防止CSRF攻击
+        // sameSite: 'none',
+        // secure: true,
     }
 }))
 

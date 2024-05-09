@@ -1,13 +1,38 @@
+const jwt = require("jsonwebtoken");
 const query = require('../db');
-
+const { TOKEN_SECRET } = process.env
 
 // 发送评论
 exports.sendComment = async (req, res) => {
-    const { article_id, content, create_time, parent_id, nickname, email, code } = req.body;
+    const { article_id, content, create_time, parent_id, nickname, email, identity, code } = req.body;
+    if (!article_id || !content || !create_time || !parent_id || !nickname || !email || !code) {
+        return res.json({
+            code: 400,
+            msg: '参数错误'
+        });
+    }
     try {
+        // 如果有身份，则判断是否是管理员
+        if (identity) {
+            const token = req.session.token;
+            console.log("评论",req.session);
+            if (!token) {
+                return res.json({
+                    code: 401,
+                    msg: '请先登录'
+                });
+            }
+            const decodedToken = jwt.verify(token, TOKEN_SECRET);
+            if (decodedToken.identity !== 'admin') {
+                return res.json({
+                    code: 401,
+                    msg: '权限不足,不允许配置身份'
+                });
+            }
+        }
+
         // 验证码小写
-        lowerCaseCode = code.toLowerCase();
-        console.log(req.session.captcha, lowerCaseCode);
+        let lowerCaseCode = code.toLowerCase();
         // 判断验证码是否正确
         if (req.session.captcha !== lowerCaseCode) {
             return res.json({
@@ -15,8 +40,8 @@ exports.sendComment = async (req, res) => {
                 msg: '验证码错误'
             });
         }
-        const sql = 'insert into comments(article_id, content, create_time, parent_id, nickname, email) values(?, ?, ?, ?, ?, ?)';
-        const [result] = await query(sql, [article_id, content, create_time, parent_id, nickname, email]);
+        const sql = 'insert into comments(article_id, content, create_time, parent_id, nickname,    , email) values(?, ?, ?, ?, ?, ?, ?)';
+        const [result] = await query(sql, [article_id, content, create_time, parent_id, nickname, identity, email]);
         if (result.affectedRows === 1) {
             return res.json({
                 code: 200,
@@ -44,6 +69,7 @@ exports.getCommentList = async (req, res) => {
             map[item.id] = item;
         });
         const tree = [];
+        const total = result.length;
         // 遍历result，找到每一条数据的parent_id，如果有parent_id，就把它放到对应的parent_id的children属性中
         result.forEach(item => {
             // 找到每一条数据的parent_id所对应在map中的value
@@ -61,7 +87,10 @@ exports.getCommentList = async (req, res) => {
             code: 200,
             msg: '获取评论列表成功',
             succeed: true,
-            data: tree
+            data: {
+                total,
+                tree
+            }
         });
     } catch (err) {
         console.log(err);
@@ -89,9 +118,11 @@ exports.getAllComment = async (req, res) => {
             code: 200,
             msg: '获取评论列表成功',
             succeed: true,
-            data: result,
-            // 向上取整
-            total: Math.ceil(result2[0].total / parseInt(pageSize))
+            data: {
+                list: result,
+                total: result2[0].total
+            },
+            
         });
     } catch (err) {
         console.log(err);

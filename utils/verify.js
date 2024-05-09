@@ -4,6 +4,7 @@ const { TOKEN_SECRET } = process.env
 // 对请求中的cookie中的token进行验证
 const authToken = async (req, res, next) => {
     // 获取cookie中的token
+    // console.log(req.session);
     const token = req.session.token;
     // 如果没有token
     if (!token) {
@@ -27,7 +28,7 @@ const authToken = async (req, res, next) => {
         // 如果token过期
         if (decodedToken.exp <= Date.now() / 1000) {
             return res.json({
-                code: 400,
+                code: 401,
                 msg: "登录已过期",
             });
         }
@@ -42,7 +43,7 @@ const authToken = async (req, res, next) => {
         }
         console.log("服务端错误：", error);
         return res.json({
-            code: 400,
+            code: 500,
             msg: "服务端错误",
         });
     }

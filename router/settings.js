@@ -5,5 +5,5 @@ const settingsController = require('../controller/settings');
 
 router.post('/save-settings', authToken, settingsController.saveSettings);
 router.get('/get-settings', settingsController.getSettings);
-
+router.get('/get-summary', settingsController.getSummary);
 module.exports = router;

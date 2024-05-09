@@ -13,7 +13,7 @@ const refreshCapacht = async (req, res) => {
             // 宽度
             width: 70,
             // 高度
-            height: 34,
+            height: 28,
             // 验证码字符中排除 0o1i
             ignoreChars: '0o1I',
         });

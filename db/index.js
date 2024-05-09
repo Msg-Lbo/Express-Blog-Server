@@ -12,7 +12,13 @@ const pool = mysql.createPool({
     // 是否等待连接池获得连接，为true时，如果没有连接，则不执行查询操作
     waitForConnections: true,
     // 查询操作队列最大限制
-    queueLimit: 0
+    queueLimit: 0,
+    // 连接空闲超时时间
+    idleTimeout: 60000,
+    // 连接超时时间
+    connectTimeout: 6000,
+    // 连接错误时打印错误信息
+    debug: false
 });
 
 // 使用数据库连接池执行查询
@@ -30,6 +36,10 @@ const query = async (sql, params) => {
     } catch (err) {
         // 打印错误信息
         console.log(err);
+        if (err.code === 'ECONNRESET') {
+            // 连接丢失，重新连接
+            return query(sql, params);
+        }
         // 抛出错误
         throw err;
     }

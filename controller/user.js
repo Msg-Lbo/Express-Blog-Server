@@ -1,5 +1,4 @@
 const query = require('../db');
-const sendMail = require('../utils/sendEmail');
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { TOKEN_SECRET } = process.env
@@ -142,11 +141,41 @@ exports.login = async (req, res) => {
         return res.json({
             code: 200,
             msg: '登陆成功',
-            succeed: true,
+            succeed: true
+        })
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '服务端错误'
+        })
+    }
+}
+
+// 获取用户信息
+exports.getUserInfo = async (req, res) => {
+    const token = req.session.token;
+    if (!token) {
+        return res.json({
+            code: 401,
+            msg: '请先登录'
+        });
+    }
+    try {
+        const user = jwt.verify(token, TOKEN_SECRET);
+        const sql = `select * from user where id = ${user.id}`;
+        const [result] = await query(sql);
+        return res.json({
+            code: 200,
+            msg: '获取成功',
             data: {
-                ...user,
-                avatar: result[0].avatar
-            }
+                id: result[0].id,
+                account: result[0].account,
+                email: result[0].email,
+                identity: result[0].identity,
+                nickname: result[0].nickname
+            },
+            succeed: true
         })
     } catch (err) {
         console.log(err);
@@ -158,23 +187,11 @@ exports.login = async (req, res) => {
 }
 // 用户退出登录
 exports.logout = async (req, res) => {
-    res.clearCookie('token', {
-        sameSite: "none",
-        secure: true,
-    })
-    // res.cookie('token', '123123',{ httpOnly: true, maxAge: 0 })
+    req.session.token = null;
+    res.clearCookie('token');
     return res.json({
         code: 200,
         msg: '退出登录成功',
-        succeed: true
-    })
-}
-
-// 登陆是否过期
-exports.isAdmin = async (req, res) => {
-    return res.json({
-        code: 200,
-        msg: true,
         succeed: true
     })
 }
