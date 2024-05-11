@@ -4,6 +4,6 @@ const authToken = require('../utils/verify');
 const tagController = require('../controller/tag');
 
 router.post('/save-tags', authToken, tagController.saveTags);
-router.get('/get-tags', tagController.getTagList);
+router.get('/get-tags', authToken, tagController.getTagList);
 router.post('/delete-tag', authToken, tagController.deleteTag)
 module.exports = router;

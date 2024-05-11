@@ -55,8 +55,15 @@ const createTables = async (req, res) => {
             LeftBgDark varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             AllowRegister tinyint(1) NOT NULL DEFAULT 0,
             MoeIcp varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            Ipc varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL, 
+            Icp varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL, 
             About text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
+            RssTitle varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+            RssDesc varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+            FeedLink varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+            SiteLink varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+            Language varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+            CopyRight varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+            webMaster varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             PRIMARY KEY (id) USING BTREE
           ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;`)
         console.log('创建 settings 表成功');
@@ -66,7 +73,7 @@ const createTables = async (req, res) => {
         const [result] = await query("SELECT * FROM blog.settings WHERE id = 1");
         if (result.length) {
             console.log('settings表已存在默认数据');
-            await query("update blog.settings set id = 1, Title = 'Express-Blog-Server', Ico = 'https://www.express-blog-server.com/favicon.ico', Avatar = 'https://www.express-blog-server.com/avatar.png', Logo = 'https://www.express-blog-server.com/logo.png', LogoText = 'Express-Blog-Server', LogoText2 = 'Express-Blog-Server', GongAn = 'https://www.express-blog-server.com/gongan.png', LeftBgLight = 'https://www.express-blog-server.com/bg-light.jpg', LeftBgDark = 'https://www.express-blog-server.com/bg-dark.jpg', AllowRegister = 1, MoeIcp = '沪ICP备12003582号-1', Ipc = '京ICP证00101000010号', About = 'Express-Blog-Server是一个基于Node.js和MySQL开发的博客系统，旨在为广大程序员提供一个简单、快速、免费的博客发布平台。'")
+            await query("update blog.settings set id = 1, Title = 'Express-Blog-Server', Ico = 'https://www.express-blog-server.com/favicon.ico', Avatar = 'https://www.express-blog-server.com/avatar.png', Logo = 'https://www.express-blog-server.com/logo.png', LogoText = 'Express-Blog-Server', LogoText2 = 'Express-Blog-Server', GongAn = 'https://www.express-blog-server.com/gongan.png', LeftBgLight = 'https://www.express-blog-server.com/bg-light.jpg', LeftBgDark = 'https://www.express-blog-server.com/bg-dark.jpg', AllowRegister = 1, MoeIcp = '沪ICP备12003582号-1', Icp = '京ICP证00101000010号', About = 'Express-Blog-Server是一个基于Node.js和MySQL开发的博客系统，旨在为广大程序员提供一个简单、快速、免费的博客发布平台。'")
         } else {
             console.log('开始填充settings表');
             const defaultSettings = [
@@ -83,7 +90,7 @@ const createTables = async (req, res) => {
                     LeftBgDark: 'https://www.express-blog-server.com/bg-dark.jpg',
                     AllowRegister: 1,
                     MoeIcp: '沪ICP备12003582号-1',
-                    Ipc: '京ICP证00101000010号',
+                    Icp: '京ICP证00101000010号',
                     About: 'Express-Blog-Next是一个基于Node.js和MySQL开发的博客系统，旨在为广大程序员提供一个简单、快速、免费的博客发布平台。'
                 }]
             await query("INSERT INTO blog.settings SET ?", defaultSettings);
@@ -101,6 +108,25 @@ const createTables = async (req, res) => {
                 PRIMARY KEY (id) USING BTREE
               ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;`)
         console.log('创建 navigations 表成功');
+
+        console.log('填充navigations表');
+        // 如果navigations表已存在数据，则不再插入默认数据
+
+        const [navigations] = await query("SELECT * FROM blog.navigations");
+        if (navigations.length) {
+            console.log('navigations表已存在数据');
+        } else {
+            const sql = `INSERT INTO blog.navigations (label, alias, status, sort) 
+            VALUES 
+            ('首页', 'home', 1, 1), 
+            ('友链', 'links', 1, 2), 
+            ('关于', 'about', 1, 3)
+            `;
+            await query(sql);
+            console.log('填充 navigations 表成功');
+        }
+
+
 
         console.log('开始创建images表');
         await query(`CREATE TABLE IF NOT EXISTS blog.images  (
@@ -220,7 +246,7 @@ const createTables = async (req, res) => {
             succeed: true,
         })
     } catch (error) {
-        console.log('创建 user 表失败', error);
+        console.log('创建表失败', error);
     }
 }
 
