@@ -10,14 +10,15 @@ exports.saveSettings = async (req, res) => {
             LogoText,
             LogoText2,
             GongAn,
-            Ipc,
+            Icp,
+            MoeIcp,
             LeftBgLight,
             LeftBgDark,
             AllowRegister,
         } = req.body;
         const allowRegister = AllowRegister === "true" ? 1 : 0;
-        const sql = 'update settings set Title = ?, Ico = ?, Logo = ?, Avatar = ?, LogoText = ?, LogoText2 = ?, GongAn = ?, Ipc = ?, LeftBgLight = ?, LeftBgDark = ?, AllowRegister = ? where id = 1';
-        const [result] = await query(sql, [Title, Ico, Logo, Avatar, LogoText, LogoText2, GongAn, Ipc, LeftBgLight, LeftBgDark, allowRegister]);
+        const sql = 'update settings set Title = ?, Ico = ?, Logo = ?, Avatar = ?, LogoText = ?, LogoText2 = ?, GongAn = ?, Icp = ?, MoeIcp = ?, LeftBgLight = ?, LeftBgDark = ?, AllowRegister = ? where id = 1';
+        const [result] = await query(sql, [Title, Ico, Logo, Avatar, LogoText, LogoText2, GongAn, Icp, MoeIcp, LeftBgLight, LeftBgDark, allowRegister]);
         if (result.affectedRows) {
             return res.json({
                 code: 200,
@@ -47,7 +48,6 @@ exports.getSettings = async (req, res) => {
             LogoText: result[0].LogoText,
             LogoText2: result[0].LogoText2,
             GongAn: result[0].GongAn,
-            Ipc: result[0].Ipc,
             Icp: result[0].Icp,
             MoeIcp: result[0].MoeIcp,
             LeftBgLight: result[0].LeftBgLight,

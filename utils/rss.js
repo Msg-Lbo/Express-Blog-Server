@@ -5,23 +5,24 @@ const query = require('../db');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    let feed = new RSS({
-        title: '一楼没太阳',
-        description: '只有坏掉的东西才会停下来',
-        feed_url: 'http://192.168.31.20:5173/#/feed',
-        site_url: 'http://192.168.31.20:5173',
-        // image_url: 'http://example.com/icon.png',
-        // managingEditor: '编辑',
-        webMaster: '一楼没太阳',
-        copyright: '版权信息',
-        language: 'zh-cn',
-        // pubDate: '发布日期',
-        // ttl: '60',
-        // generator: 'Feed for Node.js'
-
-    });
-
     try {
+        const rssSql = `select * from settings where id = 1`;
+        const [rss] = await query(rssSql);
+        let feed = new RSS({
+            title: rss[0].RssTitle,
+            description: rss[0].RssDesc,
+            feed_url: rss[0].FeedUrl,
+            site_url: rss[0].SiteUrl,
+            // image_url: 'http://example.com/icon.png',
+            // managingEditor: '编辑',
+            webMaster: rss[0].webMaster,
+            copyright: rss[0].CopyRight,
+            language: rss[0].Language,
+            // pubDate: '发布日期',
+            // ttl: '60',
+            // generator: 'Feed for Node.js'
+
+        });
         const sql = `
         select 
             articles.id, 
@@ -45,7 +46,7 @@ router.get('/', async (req, res) => {
             feed.item({
                 title: result[i].title,
                 description: result[i].description,
-                url: `http://192.168.31.20:5173/#/detail/${result[i].id}`,
+                url: `${rss[0].SiteUrl}/#/detail/${result[i].id}`,
                 categories: [result[i].category_name],
                 date: result[i].create_time,
             });
@@ -66,16 +67,51 @@ router.get('/', async (req, res) => {
 
 });
 
-router.post('/save', async (req, res) => {
-    const { title, description, url, categories, date } = req.body;
-    try{
-        const sql = `update settings set Title = ?, Ico = ?, Logo = ?, Avatar = ?, LogoText = ?, LogoText2 = ?, GongAn = ?, Ipc = ?, LeftBgLight = ?, LeftBgDark = ?, AllowRegister = ? where id = 1`;
-        const [result] = await query(sql, [title, description, url, categories, date]);
-    }catch(err){
+router.post('/save-rss', async (req, res) => {
+    const { RssTitle, RssDesc, FeedUrl, SiteUrl, Language, CopyRight, WebMaster } = req.body;
+    try {
+        const sql = `update settings set RssTitle = ?, RssDesc = ?, FeedUrl = ?, SiteUrl = ?, Language = ?, CopyRight = ?, WebMaster = ? where id = 1`;
+        const [result] = await query(sql, [RssTitle, RssDesc, FeedUrl, SiteUrl, Language, CopyRight, WebMaster]);
+        if (result.affectedRows) {
+            return res.json({
+                code: 200,
+                msg: '保存成功',
+                succeed: true
+            });
+        }
+    } catch (err) {
         console.log(err);
         return res.json({
             code: 500,
             msg: '保存失败'
+        });
+    }
+})
+
+router.get('/get-rss', async (req, res) => {
+    try {
+        const sql = `select * from settings where id = 1`;
+        const [result] = await query(sql);
+        const data = {
+            RssTitle: result[0].RssTitle,
+            RssDesc: result[0].RssDesc,
+            FeedUrl: result[0].FeedUrl,
+            SiteUrl: result[0].SiteUrl,
+            Language: result[0].Language,
+            CopyRight: result[0].CopyRight,
+            WebMaster: result[0].WebMaster,
+        }
+        return res.json({
+            code: 200,
+            msg: '获取成功',
+            data: data,
+            succeed: true
+        });
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '获取失败'
         });
     }
 })
