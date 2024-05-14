@@ -46,7 +46,6 @@ const createTables = async (req, res) => {
             id int(11) NOT NULL AUTO_INCREMENT,
             Title varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             Ico varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            Avatar varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             Logo varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             LogoText varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             LogoText2 varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
@@ -57,6 +56,7 @@ const createTables = async (req, res) => {
             MoeIcp varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             Icp varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL, 
             About text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
+            FriendTemplate text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
             RssTitle varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             RssDesc varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             FeedUrl varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
@@ -81,7 +81,6 @@ const createTables = async (req, res) => {
                     id: 1,
                     Title: 'Express-Blog-Server',
                     Ico: 'https://www.express-blog-server.com/favicon.ico',
-                    Avatar: 'https://www.express-blog-server.com/avatar.png',
                     Logo: 'https://www.express-blog-server.com/logo.png',
                     LogoText: 'Express-Blog-Server',
                     LogoText2: 'Express-Blog-Server',
@@ -91,7 +90,8 @@ const createTables = async (req, res) => {
                     AllowRegister: 1,
                     MoeIcp: '沪ICP备12003582号-1',
                     Icp: '京ICP证00101000010号',
-                    About: 'Express-Blog-Next是一个基于Node.js和MySQL开发的博客系统，旨在为广大程序员提供一个简单、快速、免费的博客发布平台。'
+                    About: 'Express-Blog-Next是一个基于Node.js和MySQL开发的博客系统，旨在为广大程序员提供一个简单、快速、免费的博客发布平台。',
+                    FriendTemplate: '',
                 }]
             await query("INSERT INTO blog.settings SET ?", defaultSettings);
             console.log('填充 settings 表成功');

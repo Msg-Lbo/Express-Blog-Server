@@ -71,6 +71,52 @@ exports.getSettings = async (req, res) => {
     }
 }
 
+
+// 保存友链模板
+exports.saveFriendTemplate = async (req, res) => {
+    try {
+        const { FriendTemplate } = req.body;
+        const sql = 'update settings set FriendTemplate = ? where id = 1';
+        const [result] = await query(sql, [FriendTemplate]);
+        if (result.affectedRows) {
+            return res.json({
+                code: 200,
+                msg: '保存成功',
+                succeed: true
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '服务端错误'
+        })
+    }
+}
+
+// 保存关于
+exports.saveAbout = async (req, res) => {
+    try {
+        const { About } = req.body;
+        const sql = 'update settings set About = ? where id = 1';
+        const [result] = await query(sql, [About]);
+        if (result.affectedRows) {
+            return res.json({
+                code: 200,
+                msg: '保存成功',
+                succeed: true
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '服务端错误'
+        })
+    }
+}
+
+
 // 汇总数据，文章总数，阅读数，comments表总条数
 exports.getSummary = async (req, res) => {
     try {

@@ -20,6 +20,7 @@ public
 .vscode
 .vscode/*
 
+pnpm-lock.yaml
 !.vscode/extensions.json
 .env
 .idea
@@ -29,4 +30,3 @@ public
 *.njsproj
 *.sln
 *.sw?
-

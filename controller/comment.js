@@ -15,7 +15,7 @@ exports.sendComment = async (req, res) => {
         // 如果有身份，则判断是否是管理员
         if (identity) {
             const token = req.session.token;
-            console.log("评论",req.session);
+            // console.log("评论",req.session);
             if (!token) {
                 return res.json({
                     code: 401,
@@ -40,8 +40,8 @@ exports.sendComment = async (req, res) => {
                 msg: '验证码错误'
             });
         }
-        const sql = 'insert into comments(article_id, content, create_time, parent_id, nickname,    , email) values(?, ?, ?, ?, ?, ?, ?)';
-        const [result] = await query(sql, [article_id, content, create_time, parent_id, nickname, identity, email]);
+        const sql = 'insert into comments(article_id, content, create_time, parent_id, identity, nickname, email) values(?, ?, ?, ?, ?, ?, ?)';
+        const [result] = await query(sql, [article_id, content, create_time, parent_id, identity, nickname, email]);
         if (result.affectedRows === 1) {
             return res.json({
                 code: 200,

@@ -9,4 +9,6 @@ router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.post('/logout', userController.logout);
 router.get('/get-userinfo', authToken, userController.getUserInfo)
+router.post('/update-userinfo', authToken, userController.updateUserInfo)
+router.post('/update-password', authToken, userController.updatePassword)
 module.exports = router;

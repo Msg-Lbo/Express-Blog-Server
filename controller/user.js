@@ -101,6 +101,33 @@ exports.register = async (req, res) => {
         })
     }
 }
+
+// 获取管理员账户
+exports.getAdmin = async (req, res) => {
+    try {
+        const sql = `select * from user where identity = 'admin'`;
+        const [result] = await query(sql);
+        return res.json({
+            code: 200,
+            msg: '获取成功',
+            data: {
+                id: result[0].id,
+                account: result[0].account,
+                email: result[0].email,
+                identity: result[0].identity,
+                nickname: result[0].nickname,
+                avatar: result[0].avatar
+            }
+        })
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '服务端错误'
+        })
+    }
+}
+
 // 登录
 exports.login = async (req, res) => {
     const { account, password } = req.body;
@@ -173,10 +200,91 @@ exports.getUserInfo = async (req, res) => {
                 account: result[0].account,
                 email: result[0].email,
                 identity: result[0].identity,
-                nickname: result[0].nickname
+                nickname: result[0].nickname,
+                avatar: result[0].avatar
             },
             succeed: true
         })
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '服务端错误'
+        })
+    }
+}
+
+// 更新用户信息
+exports.updateUserInfo = async (req, res) => {
+    const { nickname, avatar, email } = req.body;
+    const token = req.session.token;
+    if (!token) {
+        return res.json({
+            code: 401,
+            msg: '请先登录'
+        });
+    }
+    try {
+        const user = jwt.verify(token, TOKEN_SECRET);
+        const sql = `update user set nickname = ?, avatar = ?, email = ? where id = ?`;
+        const [result] = await query(sql, [nickname, avatar, email, user.id]);
+        if (result.affectedRows === 1) {
+            return res.json({
+                code: 200,
+                msg: '保存成功',
+                succeed: true
+            })
+        } else {
+            return res.json({
+                code: 500,
+                msg: '保存失败'
+            })
+        }
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '服务端错误'
+        })
+    }
+}
+
+// 修改密码
+exports.updatePassword = async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const token = req.session.token;
+    if (!token) {
+        return res.json({
+            code: 401,
+            msg: '请先登录'
+        });
+    }
+    try {
+        const user = jwt.verify(token, TOKEN_SECRET);
+        const sql = `select * from user where id = ${user.id}`;
+        const [result] = await query(sql);
+        const isOk = await bcrypt.compare(oldPassword, result[0].password);
+        if (!isOk) {
+            return res.json({
+                code: 400,
+                msg: '原密码错误'
+            });
+        }
+        const hashPassword = await bcrypt.hash(newPassword, 10);
+        const sql1 = `update user set password = ? where id = ?`;
+        const [result1] = await query(sql1, [hashPassword, user.id]);
+        if (result1.affectedRows === 1) {
+            return res.json({
+                code: 200,
+                msg: '修改成功',
+                succeed: true
+            })
+        } else {
+            return res.json({
+                code: 500,
+                msg: '修改失败'
+            })
+        }
     } catch (err) {
         console.log(err);
         return res.json({
