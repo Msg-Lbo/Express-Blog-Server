@@ -69,7 +69,7 @@ exports.uploadImage = async (req, res) => {
 exports.deleteImage = async (req, res) => {
     try {
         const { image_id } = req.body;
-        const sql2 = `select image_name from images where image_id = '${image_id}'`;
+        const sql2 = `select * from images where image_id = '${image_id}'`;
         const [result2] = await query(sql2);
         const sql = `delete from images where image_id = '${image_id}'`;
         const [result] = await query(sql);
@@ -80,8 +80,7 @@ exports.deleteImage = async (req, res) => {
             });
         } else {
             // 获取图片名后删除public/uploads文件夹下的图片
-            console.log('./public/uploads/' + result2[0].image_name);
-            fs.unlinkSync('./public/uploads/' + result2[0].image_name)
+            fs.unlinkSync('./public' + result2[0].url)
             return res.json({
                 code: 200,
                 msg: '图片删除成功',
