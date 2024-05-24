@@ -123,8 +123,7 @@ exports.getImageList = async (req, res) => {
                 succeed: true,
                 data: {
                     list: result,
-                    // 向上取整
-                    count: Math.ceil(total[0].total / pageSize)
+                    total: total[0].total
                 }
             });
         }

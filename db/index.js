@@ -36,12 +36,13 @@ const query = async (sql, params) => {
     } catch (err) {
         // 打印错误信息
         console.log(err);
+
         if (err.code === 'ECONNRESET') {
             // 连接丢失，重新连接
             return query(sql, params);
         }
         // 抛出错误
-        throw err;
+        throw { message: '数据库查询失败,可能是连接信息有误', code: err };
     }
 };
 

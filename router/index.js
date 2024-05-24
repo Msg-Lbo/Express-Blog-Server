@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authToken = require('../utils/verify');
-const { createTables, createSuperuser } = require('../utils/install')
+const createTablesController = require('../utils/install')
 
 router.use('/user', require('./user'));
 router.use('/article', require('./article'));
@@ -14,8 +14,11 @@ router.use('/navigations', require('./navigations'));
 router.use('/tags', require('./tag'));
 router.use('/feed', require('../utils/rss'));
 router.get('/refreshCaptcha', require('../utils/svgCode'));
-router.get('/create-tables', createTables, () => { });
-router.post('/create-superuser', createSuperuser, () => { });
+router.get('/getEnv', createTablesController.checkInstallLock, createTablesController.getEnvData);
+router.get('/testEmailService', createTablesController.checkInstallLock, require('../utils/getCaptcha'))
+router.post('/verifyEmailCode', createTablesController.checkInstallLock, createTablesController.verifyEmailCode)
+router.get('/testConnection', createTablesController.checkInstallLock, createTablesController.checkConnection)
+router.post('/installBackend', createTablesController.checkInstallLock, createTablesController.createTables);
 
 router.get('/test', authToken, (req, res) => {
     console.log(req.session);

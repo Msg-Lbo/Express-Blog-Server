@@ -1,23 +1,111 @@
 const query = require('../db');
+const fs = require('fs');
+const path = require('path');
 const bcrypt = require('bcryptjs')
 const GenId = require("../utils/genId")
+const dotenv = require("dotenv")
+
 const genId = new GenId({ WorkerId: 1 });
+const installLock = path.join(__dirname, '../install.lock');
+const envPath = path.join(__dirname, '../.env');
+const envData = dotenv.parse(fs.readFileSync(envPath))
+
+// 检查是否已经安装过
+const checkInstallLock = (req, res, next) => {
+    if (fs.existsSync(installLock)) {
+        return res.json({
+            code: 403,
+            msg: '已经安装过，请不要重复安装'
+        })
+    }
+    next()
+}
+
+
+// 获取.env文件内容
+const getEnvData = (req, res) => {
+    return res.json({
+        code: 200,
+        msg: '获取.env文件内容成功',
+        data: envData,
+        succeed: true
+    })
+}
+
+
 // 数据库链接是否成功
-const checkConnection = async () => {
+const checkConnection = async (req, res) => {
+    console.log(envData);
     try {
         await query('SELECT 1');
         console.log('数据库链接成功');
-        return true;
+        return res.json({
+            code: 200,
+            msg: '数据库链接成功',
+            succeed: true
+        })
     } catch (error) {
-        console.log('数据库链接失败');
-        return false;
+        return res.json({
+            code: 500,
+            msg: '数据库链接失败',
+        })
     }
 }
 
-const createTables = async (req, res) => {
-    if (!await checkConnection()) {
-        return;
+// 测试邮件验证码
+const verifyEmailCode = async (req, res) => {
+    const { email, code } = req.body;
+    try {
+        const sessionCaptcha = req.session.captcha;
+        if (!sessionCaptcha) {
+            return res.json({
+                code: 400,
+                msg: '请获取验证码'
+            });
+        }
+        console.log(email, code);
+        console.log(sessionCaptcha);
+        if (!sessionCaptcha[email]) {
+            return res.json({
+                code: 400,
+                msg: '邮箱错误'
+            });
+        }
+
+        const { captcha, expires } = sessionCaptcha[email];
+        if (code !== captcha) {
+            return res.json({
+                code: 400,
+                msg: '验证码错误'
+            });
+        }
+
+        if (Date.now() > expires) {
+            return res.json({
+                code: 400,
+                msg: '验证码已过期，请重新获取'
+            });
+        }
+
+        return res.json({
+            code: 200,
+            msg: '验证码验证成功',
+            succeed: true
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.json({
+            code: 500,
+            msg: '服务器错误'
+        });
     }
+}
+
+
+
+const createTables = async (req, res) => {
+    const { account, password, email } = req.body;
     try {
         console.log('开始创建user表');
         await query(`CREATE TABLE  IF NOT EXISTS blog.user (
@@ -31,6 +119,15 @@ const createTables = async (req, res) => {
             PRIMARY KEY (id) USING BTREE
           ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;`);
         console.log('创建 user 表成功');
+
+        console.log('开始创建超级用户');
+        const hashPassword = await bcrypt.hash(password, 10);
+        const createUserResult = await query(`INSERT INTO blog.user (account, nickname, email, password, identity) VALUES (?, ?, ?, ?, ?)`, [account, account, email, hashPassword, 'admin']);
+        if (createUserResult.affectedRows === 1) {
+            console.log('创建超级用户成功');
+        } else {
+            console.log('创建超级用户失败,请检查账号是否重复');
+        }
 
         console.log('开始创建tags表');
         await query(`CREATE TABLE IF NOT EXISTS blog.tags (
@@ -50,11 +147,10 @@ const createTables = async (req, res) => {
             LogoText varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             LogoText2 varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             GongAn varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            LeftBgLight varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            LeftBgDark varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             AllowRegister tinyint(1) NOT NULL DEFAULT 0,
             MoeIcp varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             Icp varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL, 
+            Domain varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             About text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
             FriendTemplate text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
             RssTitle varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
@@ -71,28 +167,25 @@ const createTables = async (req, res) => {
         console.log("填充settings表");
         // 为id=1的settings表填充默认数据
         const [result] = await query("SELECT * FROM blog.settings WHERE id = 1");
+        const defaultSettings = [{
+            id: 1,
+            Title: 'Express-Blog-Server',
+            Ico: 'https://www.express-blog-server.com/favicon.ico',
+            Logo: 'https://www.express-blog-server.com/logo.png',
+            LogoText: 'Express-Blog-Server',
+            LogoText2: 'Express-Blog-Server',
+            GongAn: '京ICP证00101000010号-1',
+            AllowRegister: 1,
+            MoeIcp: '沪ICP备12003582号-1',
+            Icp: '京ICP证00101000010号',
+            About: 'Express-Blog-Next是一个基于Node.js和MySQL开发的博客系统，旨在为广大程序员提供一个简单、快速、免费的博客发布平台。',
+            FriendTemplate: '',
+        }]
         if (result.length) {
-            console.log('settings表已存在默认数据');
-            await query("update blog.settings set id = 1, Title = 'Express-Blog-Server', Ico = 'https://www.express-blog-server.com/favicon.ico', Avatar = 'https://www.express-blog-server.com/avatar.png', Logo = 'https://www.express-blog-server.com/logo.png', LogoText = 'Express-Blog-Server', LogoText2 = 'Express-Blog-Server', GongAn = 'https://www.express-blog-server.com/gongan.png', LeftBgLight = 'https://www.express-blog-server.com/bg-light.jpg', LeftBgDark = 'https://www.express-blog-server.com/bg-dark.jpg', AllowRegister = 1, MoeIcp = '沪ICP备12003582号-1', Icp = '京ICP证00101000010号', About = 'Express-Blog-Server是一个基于Node.js和MySQL开发的博客系统，旨在为广大程序员提供一个简单、快速、免费的博客发布平台。'")
+            console.log('settings表已存在默认数据,更新');
+            await query("UPDATE blog.settings SET ? WHERE id = 1", defaultSettings);
         } else {
             console.log('开始填充settings表');
-            const defaultSettings = [
-                {
-                    id: 1,
-                    Title: 'Express-Blog-Server',
-                    Ico: 'https://www.express-blog-server.com/favicon.ico',
-                    Logo: 'https://www.express-blog-server.com/logo.png',
-                    LogoText: 'Express-Blog-Server',
-                    LogoText2: 'Express-Blog-Server',
-                    GongAn: 'https://www.express-blog-server.com/gongan.png',
-                    LeftBgLight: 'https://www.express-blog-server.com/bg-light.jpg',
-                    LeftBgDark: 'https://www.express-blog-server.com/bg-dark.jpg',
-                    AllowRegister: 1,
-                    MoeIcp: '沪ICP备12003582号-1',
-                    Icp: '京ICP证00101000010号',
-                    About: 'Express-Blog-Next是一个基于Node.js和MySQL开发的博客系统，旨在为广大程序员提供一个简单、快速、免费的博客发布平台。',
-                    FriendTemplate: '',
-                }]
             await query("INSERT INTO blog.settings SET ?", defaultSettings);
             console.log('填充 settings 表成功');
         }
@@ -118,7 +211,7 @@ const createTables = async (req, res) => {
         } else {
             const sql = `INSERT INTO blog.navigations (label, alias, status, sort) 
             VALUES 
-            ('首页', 'home', 1, 1), 
+            ('首页', '', 1, 1), 
             ('友链', 'links', 1, 2), 
             ('关于', 'about', 1, 3)
             `;
@@ -148,7 +241,7 @@ const createTables = async (req, res) => {
             logo varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
             status tinyint(1) NOT NULL DEFAULT 0,
             PRIMARY KEY (id) USING BTREE
-          ) ENGINE = MyISAM CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;`)
+          ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;`)
         console.log('创建 friends 表成功');
 
         console.log('开始创建comments表');
@@ -205,7 +298,7 @@ const createTables = async (req, res) => {
             category_id bigint(20) NULL DEFAULT NULL,
             read_count int(11) NULL DEFAULT 0,
             PRIMARY KEY (id) USING BTREE
-          ) ENGINE = InnoDB AUTO_INCREMENT = 172 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;`)
+          ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;`)
         console.log('创建 articles 表成功');
 
         // 填充 articles 表
@@ -240,38 +333,43 @@ const createTables = async (req, res) => {
             CONSTRAINT article_tags_ibfk_2 FOREIGN KEY (tag_id) REFERENCES blog.tags (id) ON DELETE CASCADE ON UPDATE RESTRICT
           ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;`)
         console.log('创建 article_tags 表成功');
+
+        console.log("开始创建carousel表");
+        await query(`CREATE TABLE IF NOT EXISTS blog.carousel  (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            title varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+            cover varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+            link varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+            PRIMARY KEY (id) USING BTREE
+          ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;`)
+        console.log('创建 carousel 表成功');
+
+
+        // 创建install.lock文件，表示项目已安装
+        fs.writeFileSync(installLock, 'lock');
+        console.log('创建 install.lock 文件成功');
         res.json({
             code: 200,
-            msg: '创建表成功',
+            msg: '后端安装成功',
             succeed: true,
         })
     } catch (error) {
-        console.log('创建表失败', error);
-    }
-}
-
-const createSuperuser = async (req, res) => {
-    const { account, password, email } = req.body;
-    try {
-        const hashPassword = await bcrypt.hash(password, 10);
-        const result = await query(`INSERT INTO blog.user (account, email, password, identity) VALUES (?, ?, ?, ?)`, [account, email, hashPassword, 'admin']);
-        if (result.affectedRows) {
-            console.log('创建超级管理员成功');
+        console.log('后端安装失败,请检查日志', error);
+        const data = {
+            message: error.message,
+            code: error.code,
+            errno: error.errno,
+            sqlState: error.sqlState,
+            sqlMessage: error.sqlMessage,
         }
         res.json({
-            code: 200,
-            msg: '创建超级管理员成功',
-            succeed: true,
-        })
-    } catch (error) {
-        console.log('创建超级管理员失败', error);
-        res.json({
             code: 500,
-            msg: '创建超级管理员失败',
+            msg: '后端安装失败,请检查',
+            data: data,
             succeed: false,
         })
+        return
     }
-
 }
 
-module.exports = { createTables, createSuperuser }
+module.exports = { checkInstallLock, verifyEmailCode, getEnvData, checkConnection, createTables }

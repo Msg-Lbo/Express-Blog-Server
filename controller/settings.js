@@ -6,19 +6,17 @@ exports.saveSettings = async (req, res) => {
             Title,
             Ico,
             Logo,
-            Avatar,
             LogoText,
             LogoText2,
             GongAn,
             Icp,
             MoeIcp,
-            LeftBgLight,
-            LeftBgDark,
+            Domain,
             AllowRegister,
         } = req.body;
         const allowRegister = AllowRegister === "true" ? 1 : 0;
-        const sql = 'update settings set Title = ?, Ico = ?, Logo = ?, Avatar = ?, LogoText = ?, LogoText2 = ?, GongAn = ?, Icp = ?, MoeIcp = ?, LeftBgLight = ?, LeftBgDark = ?, AllowRegister = ? where id = 1';
-        const [result] = await query(sql, [Title, Ico, Logo, Avatar, LogoText, LogoText2, GongAn, Icp, MoeIcp, LeftBgLight, LeftBgDark, allowRegister]);
+        const sql = 'update settings set Title = ?, Ico = ?, Logo = ?, LogoText = ?, LogoText2 = ?, GongAn = ?, Icp = ?, MoeIcp = ?, Domain = ?, AllowRegister = ? where id = 1';
+        const [result] = await query(sql, [Title, Ico, Logo, LogoText, LogoText2, GongAn, Icp, MoeIcp, Domain, allowRegister]);
         if (result.affectedRows) {
             return res.json({
                 code: 200,
@@ -50,6 +48,7 @@ exports.getSettings = async (req, res) => {
             GongAn: result[0].GongAn,
             Icp: result[0].Icp,
             MoeIcp: result[0].MoeIcp,
+            Domain: result[0].Domain,
             LeftBgLight: result[0].LeftBgLight,
             LeftBgDark: result[0].LeftBgDark,
             AllowRegister: result[0].AllowRegister === 1 ? true : false,
@@ -136,6 +135,111 @@ exports.getSummary = async (req, res) => {
         return res.json({
             code: 500,
             msg: '获取失败'
+        });
+    }
+}
+
+// 获取轮播图
+exports.getCarousel = async (req, res) => {
+    try {
+        const sql = 'select * from carousel';
+        const [result] = await query(sql);
+        return res.json({
+            code: 200,
+            msg: '获取成功',
+            succeed: true,
+            data: result
+        });
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '获取失败'
+        });
+    }
+}
+
+// 保存轮播图
+exports.saveCarousel = async (req, res) => {
+    const { title, cover, link } = req.body;
+
+    if (!title || !cover || !link) {
+        return res.json({
+            code: 400,
+            msg: '参数不完整'
+        });
+    }
+    try {
+        const sql = 'insert into carousel (title, cover, link) values (?, ?, ?)';
+        const [result] = await query(sql, [title, cover, link]);
+        if (result.affectedRows) {
+            return res.json({
+                code: 200,
+                msg: '保存成功',
+                succeed: true
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '保存失败'
+        });
+    }
+}
+
+// 删除轮播图
+exports.deleteCarousel = async (req, res) => {
+    const { id } = req.body;
+    if (!id) {
+        return res.json({
+            code: 400,
+            msg: '参数不完整'
+        });
+    }
+    try {
+        const sql = 'delete from carousel where id = ?';
+        const [result] = await query(sql, [id]);
+        if (result.affectedRows) {
+            return res.json({
+                code: 200,
+                msg: '删除成功',
+                succeed: true
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '删除失败'
+        });
+    }
+}
+
+// 修改轮播图
+exports.updateCarousel = async (req, res) => {
+    const { title, cover, link, id } = req.body;
+    if (!title || !cover || !link || !id) {
+        return res.json({
+            code: 400,
+            msg: '参数不完整'
+        });
+    }
+    try {
+        const sql = 'update carousel set title = ?, cover = ?, link = ? where id = ?';
+        const [result] = await query(sql, [title, cover, link, id]);
+        if (result.affectedRows) {
+            return res.json({
+                code: 200,
+                msg: '修改成功',
+                succeed: true
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.json({
+            code: 500,
+            msg: '修改失败'
         });
     }
 }

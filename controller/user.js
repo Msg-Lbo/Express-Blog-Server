@@ -252,6 +252,12 @@ exports.updateUserInfo = async (req, res) => {
 // 修改密码
 exports.updatePassword = async (req, res) => {
     const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+        return res.json({
+            code: 400,
+            msg: '参数不完整'
+        });
+    }
     const token = req.session.token;
     if (!token) {
         return res.json({

@@ -1,4 +1,5 @@
 const nodeMail = require("../smtp");
+const { EMAIL_NAME, EMAIL_USER } = process.env
 const sendMail = (to, subject, params) => {
     let html = ""
     if (subject === "验证码") {
@@ -31,7 +32,7 @@ const sendMail = (to, subject, params) => {
     }
     // 发送的配置项
     const mail = {
-        from: '"一楼没太阳" <ylmty@foxmail.com>',
+        from: `"${EMAIL_NAME}" <${EMAIL_USER}>`,
         subject: subject,
         to: to,
         html: html

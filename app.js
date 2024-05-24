@@ -5,13 +5,15 @@ const multer = require('multer');
 const session = require('express-session');
 const cookieParser = require('cookie-parser')
 const dotenv = require("dotenv")
+
+
 dotenv.config()
 const { HOST, PORT, SESSION_SECRET } = process.env
 
 const app = express();
 
 const corsOptions = {
-    origin: ['https://blog.ylmty.cc', 'http://127.0.0.1:5173', 'http://localhost:5173', 'http://192.168.31.20:5173'],
+    origin: [],
     methods: 'GET,POST',
     allowHeaders: 'Content-Type,Authorization',
     exposeHeaders: 'Content-length',
@@ -30,7 +32,7 @@ app.use(upload.any());
 app.use(express.static('./public'));
 app.use(cookieParser());
 app.use(session({
-    secret: SESSION_SECRET, // 用来对 session id 进行签名
+    secret: SESSION_SECRET || '000000', // 用来对 session id 进行签名
     resave: false, // 是否每次都重新保存 session
     saveUninitialized: true, // 是否自动保存未初始化的 session
     cookie: {
