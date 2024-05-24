@@ -9,7 +9,7 @@ const genId = new GenId({ WorkerId: 1 });
 const installLock = path.join(__dirname, '../install.lock');
 const envPath = path.join(__dirname, '../.env');
 const envData = dotenv.parse(fs.readFileSync(envPath))
-
+const { DB_ROOT } = process.env
 // 检查是否已经安装过
 const checkInstallLock = (req, res, next) => {
     if (fs.existsSync(installLock)) {
@@ -108,7 +108,7 @@ const createTables = async (req, res) => {
     const { account, password, email } = req.body;
     try {
         console.log('开始创建user表');
-        await query(`CREATE TABLE  IF NOT EXISTS blog.user (
+        await query(`CREATE TABLE  IF NOT EXISTS ${DB_ROOT}.user (
             id int(11) NOT NULL AUTO_INCREMENT,
             account varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
             email varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -122,7 +122,7 @@ const createTables = async (req, res) => {
 
         console.log('开始创建超级用户');
         const hashPassword = await bcrypt.hash(password, 10);
-        const createUserResult = await query(`INSERT INTO blog.user (account, nickname, email, password, identity) VALUES (?, ?, ?, ?, ?)`, [account, account, email, hashPassword, 'admin']);
+        const createUserResult = await query(`INSERT INTO ${DB_ROOT}.user (account, nickname, email, password, identity) VALUES (?, ?, ?, ?, ?)`, [account, account, email, hashPassword, 'admin']);
         if (createUserResult.affectedRows === 1) {
             console.log('创建超级用户成功');
         } else {
@@ -130,7 +130,7 @@ const createTables = async (req, res) => {
         }
 
         console.log('开始创建tags表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.tags (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.tags (
           id int(11) NOT NULL AUTO_INCREMENT,
           label varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
           PRIMARY KEY (id) USING BTREE
@@ -139,7 +139,7 @@ const createTables = async (req, res) => {
 
 
         console.log('开始创建settings表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.settings  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.settings  (
             id int(11) NOT NULL AUTO_INCREMENT,
             Title varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             Ico varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
@@ -166,7 +166,7 @@ const createTables = async (req, res) => {
 
         console.log("填充settings表");
         // 为id=1的settings表填充默认数据
-        const [result] = await query("SELECT * FROM blog.settings WHERE id = 1");
+        const [result] = await query(`SELECT * FROM ${DB_ROOT}.settings WHERE id = 1`);
         const defaultSettings = [{
             id: 1,
             Title: 'Express-Blog-Server',
@@ -183,16 +183,16 @@ const createTables = async (req, res) => {
         }]
         if (result.length) {
             console.log('settings表已存在默认数据,更新');
-            await query("UPDATE blog.settings SET ? WHERE id = 1", defaultSettings);
+            await query(`UPDATE ${DB_ROOT}.settings SET ? WHERE id = 1`, defaultSettings);
         } else {
             console.log('开始填充settings表');
-            await query("INSERT INTO blog.settings SET ?", defaultSettings);
+            await query(`INSERT INTO ${DB_ROOT}.settings SET ?`, defaultSettings);
             console.log('填充 settings 表成功');
         }
 
 
         console.log('开始创建navigations表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.navigations  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.navigations  (
                 id int(11) NOT NULL AUTO_INCREMENT,
                 label varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
                 alias varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -205,11 +205,11 @@ const createTables = async (req, res) => {
         console.log('填充navigations表');
         // 如果navigations表已存在数据，则不再插入默认数据
 
-        const [navigations] = await query("SELECT * FROM blog.navigations");
+        const [navigations] = await query(`SELECT * FROM ${DB_ROOT}.navigations`);
         if (navigations.length) {
             console.log('navigations表已存在数据');
         } else {
-            const sql = `INSERT INTO blog.navigations (label, alias, status, sort) 
+            const sql = `INSERT INTO ${DB_ROOT}.navigations (label, alias, status, sort) 
             VALUES 
             ('首页', '', 1, 1), 
             ('友链', 'links', 1, 2), 
@@ -222,7 +222,7 @@ const createTables = async (req, res) => {
 
 
         console.log('开始创建images表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.images  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.images  (
             id int(11) NOT NULL AUTO_INCREMENT,
             image_id varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
             url varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -232,7 +232,7 @@ const createTables = async (req, res) => {
         console.log('创建 images 表成功');
 
         console.log('开始创建friends表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.friends  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.friends  (
             id bigint(20) NOT NULL,
             name varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
             link varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -245,7 +245,7 @@ const createTables = async (req, res) => {
         console.log('创建 friends 表成功');
 
         console.log('开始创建comments表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.comments  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.comments  (
             id int(11) NOT NULL AUTO_INCREMENT,
             article_id varchar(11) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             parent_id varchar(11) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
@@ -259,7 +259,7 @@ const createTables = async (req, res) => {
         console.log('创建 comments 表成功');
 
         console.log('开始创建categories表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.categories  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.categories  (
             id bigint(20) NOT NULL,
             category_name varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
             category_alias varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -271,7 +271,7 @@ const createTables = async (req, res) => {
 
         console.log("填充 categories 表");
 
-        const [categories] = await query("SELECT * FROM blog.categories");
+        const [categories] = await query(`SELECT * FROM ${DB_ROOT}.categories`);
         if (categories.length) {
             console.log('categories 表已存在数据');
         } else {
@@ -282,12 +282,12 @@ const createTables = async (req, res) => {
                     category_name: '默认分类',
                     category_alias: 'default',
                 }]
-            await query("INSERT INTO blog.categories SET ?", defaultCategories);
+            await query(`INSERT INTO ${DB_ROOT}.categories SET ?`, defaultCategories);
         }
 
 
         console.log('开始创建articles表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.articles  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.articles  (
             id int(11) NOT NULL AUTO_INCREMENT,
             title varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
             description varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -303,8 +303,8 @@ const createTables = async (req, res) => {
 
         // 填充 articles 表
         console.log("填充 articles 表");
-        const [articles] = await query("SELECT * FROM blog.articles");
-        const [category] = await query("SELECT * FROM blog.categories WHERE category_alias = 'default'");
+        const [articles] = await query(`SELECT * FROM ${DB_ROOT}.articles`);
+        const [category] = await query(`SELECT * FROM ${DB_ROOT}.categories WHERE category_alias = 'default'`);
         if (articles.length) {
             console.log('articles 表已存在数据');
         } else {
@@ -319,23 +319,23 @@ const createTables = async (req, res) => {
                     category_id: category[0].id,
                     read_count: 0,
                 }]
-            await query("INSERT INTO blog.articles SET ?", defaultArticles);
+            await query(`INSERT INTO ${DB_ROOT}.articles SET ?`, defaultArticles);
         }
 
 
         console.log('开始创建article_tags表');
-        await query(`CREATE TABLE IF NOT EXISTS blog.article_tags  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.article_tags  (
             article_id int(11) NOT NULL,
             tag_id int(11) NOT NULL,
             PRIMARY KEY (article_id, tag_id) USING BTREE,
             INDEX tag_id(tag_id) USING BTREE,
-            CONSTRAINT article_tags_ibfk_1 FOREIGN KEY (article_id) REFERENCES blog.articles (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-            CONSTRAINT article_tags_ibfk_2 FOREIGN KEY (tag_id) REFERENCES blog.tags (id) ON DELETE CASCADE ON UPDATE RESTRICT
+            CONSTRAINT article_tags_ibfk_1 FOREIGN KEY (article_id) REFERENCES ${DB_ROOT}.articles (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+            CONSTRAINT article_tags_ibfk_2 FOREIGN KEY (tag_id) REFERENCES ${DB_ROOT}.tags (id) ON DELETE CASCADE ON UPDATE RESTRICT
           ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;`)
         console.log('创建 article_tags 表成功');
 
         console.log("开始创建carousel表");
-        await query(`CREATE TABLE IF NOT EXISTS blog.carousel  (
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.carousel  (
             id int(11) NOT NULL AUTO_INCREMENT,
             title varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
             cover varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
