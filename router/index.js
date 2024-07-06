@@ -12,7 +12,6 @@ router.use('/image', require('./image'));
 router.use('/settings', require('./settings'));
 router.use('/navigations', require('./navigations'));
 router.use('/tags', require('./tag'));
-router.use('/feed', require('../utils/rss'));
 router.get('/refreshCaptcha', require('../utils/svgCode'));
 router.get('/getEnv', createTablesController.checkInstallLock, createTablesController.getEnvData);
 router.get('/testEmailService', createTablesController.checkInstallLock, require('../utils/getCaptcha'))

@@ -57,7 +57,10 @@ exports.saveArticle = async (req, res) => {
                 return res.json({
                     code: 200,
                     msg: '更新成功',
-                    succeed: true
+                    succeed: true,
+                    data:{
+                        id: id
+                    }
                 });
             } else {
                 return res.json({
@@ -76,7 +79,11 @@ exports.saveArticle = async (req, res) => {
                 return res.json({
                     code: 200,
                     msg: '保存成功',
-                    succeed: true
+                    succeed: true,
+                    // 新增文章成功后返回文章id
+                    data: {
+                        id: articleId
+                    }
                 });
             } else {
                 return res.json({

@@ -227,9 +227,7 @@ exports.updateUserInfo = async (req, res) => {
     try {
         const user = jwt.verify(token, TOKEN_SECRET);
         const sql = `update user set nickname = ?, avatar = ?, email = ? where id = ?`;
-        const settingsSql = `update settings set Avatar = ? where id = 1`
         const [result] = await query(sql, [nickname, avatar, email, user.id]);
-        await query(settingsSql, [avatar]);
         if (result.affectedRows === 1) {
             return res.json({
                 code: 200,

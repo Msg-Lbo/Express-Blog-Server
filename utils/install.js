@@ -154,13 +154,6 @@ const createTables = async (req, res) => {
             Domain varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             About text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
             FriendTemplate text CHARACTER SET utf8 COLLATE utf8_general_ci NULL,
-            RssTitle varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            RssDesc varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            FeedUrl varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            SiteUrl varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            Language varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            CopyRight varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-            WebMaster varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
             PRIMARY KEY (id) USING BTREE
           ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;`)
         console.log('创建 settings 表成功');
@@ -329,10 +322,7 @@ const createTables = async (req, res) => {
         await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.article_tags  (
             article_id int(11) NOT NULL,
             tag_id int(11) NOT NULL,
-            PRIMARY KEY (article_id, tag_id) USING BTREE,
-            INDEX tag_id(tag_id) USING BTREE,
-            CONSTRAINT article_tags_ibfk_1 FOREIGN KEY (article_id) REFERENCES ${DB_ROOT}.articles (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
-            CONSTRAINT article_tags_ibfk_2 FOREIGN KEY (tag_id) REFERENCES ${DB_ROOT}.tags (id) ON DELETE CASCADE ON UPDATE RESTRICT
+            PRIMARY KEY (article_id, tag_id) USING BTREE
           ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;`)
         console.log('创建 article_tags 表成功');
 
