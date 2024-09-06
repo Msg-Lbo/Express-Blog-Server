@@ -39,7 +39,7 @@ const updateTags = async (articleId, tags) => {
 exports.saveArticle = async (req, res) => {
     const { id, title, description, content, category_id, create_time, update_time, tags } = req.body;
     // 检查必需参数
-    if (!title || !description || !content || !category_id || !create_time) {
+    if (!title || !description || !content || !category_id) {
         return res.json({
             code: 400,
             msg: '参数不完整'
@@ -49,8 +49,8 @@ exports.saveArticle = async (req, res) => {
         if (id) {
             // 更新文章
             const newUpdate_time = update_time ? update_time : Date.now();
-            const updateSql = 'UPDATE articles SET title=?, description=?, content=?, category_id=?, update_time=? WHERE id=?';
-            const [updateResult] = await query(updateSql, [title, description, content, category_id, newUpdate_time, id]);
+            const updateSql = 'UPDATE articles SET title=?, description=?, content=?, category_id=?, create_time=?, update_time=? WHERE id=?';
+            const [updateResult] = await query(updateSql, [title, description, content, category_id, create_time, newUpdate_time, id]);
             if (updateResult.affectedRows) {
                 // 更新标签
                 await updateTags(id, tags);
@@ -58,7 +58,7 @@ exports.saveArticle = async (req, res) => {
                     code: 200,
                     msg: '更新成功',
                     succeed: true,
-                    data:{
+                    data: {
                         id: id
                     }
                 });
@@ -69,9 +69,11 @@ exports.saveArticle = async (req, res) => {
                 });
             }
         } else {
+            const newCreate_time = create_time ? create_time : Date.now();
+            const newUpdate_time = update_time ? update_time : Date.now();
             // 保存文章
-            const insertSql = 'INSERT INTO articles (title, description, content, category_id, create_time) VALUES (?, ?, ?, ?, ?)';
-            const [insertResult] = await query(insertSql, [title, description, content, category_id, create_time]);
+            const insertSql = 'INSERT INTO articles (title, description, content, category_id, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?)';
+            const [insertResult] = await query(insertSql, [title, description, content, category_id, newCreate_time, newUpdate_time]);
             if (insertResult.affectedRows) {
                 const articleId = insertResult.insertId;
                 // 处理标签

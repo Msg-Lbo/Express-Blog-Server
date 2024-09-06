@@ -59,7 +59,7 @@ exports.sendComment = async (req, res) => {
 }
 // 获取评论列表
 exports.getCommentList = async (req, res) => {
-    const { article_id } = req.query;
+    const { article_id, page = 1, pageSize = 20 } = req.query;
     try {
         const sql = 'select * from comments where article_id = ?';
         const [result] = await query(sql, [article_id]);
@@ -122,7 +122,7 @@ exports.getAllComment = async (req, res) => {
                 list: result,
                 total: result2[0].total
             },
-            
+
         });
     } catch (err) {
         console.log(err);
