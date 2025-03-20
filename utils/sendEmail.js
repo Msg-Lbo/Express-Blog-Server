@@ -29,6 +29,12 @@ const sendMail = (to, subject, params) => {
             <p>您好！</p>
             <p>您的友链已更新,请前往网站查看详细</p>
             `
+    } else if (subject === "新评论通知") {
+        html = `
+            <p>您好！</p>
+            <p>内容: ${params}</p>
+            <p>有新的评论发布,请前往网站查看详细</p>
+            `
     }
     // 发送的配置项
     const mail = {

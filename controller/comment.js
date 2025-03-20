@@ -6,6 +6,8 @@ const { TOKEN_SECRET } = process.env
 exports.sendComment = async (req, res) => {
     const { article_id, content, create_time, parent_id, nickname, email, identity, code } = req.body;
     if (!article_id || !content || !create_time || !parent_id || !nickname || !email || !code) {
+        console.log(req.body);
+
         return res.json({
             code: 400,
             msg: '参数错误'
@@ -43,6 +45,15 @@ exports.sendComment = async (req, res) => {
         const sql = 'insert into comments(article_id, content, create_time, parent_id, identity, nickname, email) values(?, ?, ?, ?, ?, ?, ?)';
         const [result] = await query(sql, [article_id, content, create_time, parent_id, identity, nickname, email]);
         if (result.affectedRows === 1) {
+            // 如果是普通用户评论，发送邮件通知管理员
+            if (!identity || identity !== 'admin') {
+                // 查询管理员邮箱
+                const [admin] = await query('select email from user where identity = ?', ['admin']);
+                if (admin.length > 0) {
+                    const sendEmail = require('../utils/sendEmail');
+                    sendEmail(admin[0].email, '新评论通知', content);
+                }
+            }
             return res.json({
                 code: 200,
                 msg: '评论成功',
