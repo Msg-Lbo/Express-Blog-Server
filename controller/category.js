@@ -151,8 +151,10 @@ exports.getArticleByCategoryAlias = async (req, res) => {
     WHERE 
         category_alias = ?
     GROUP BY 
+        articles.id
+    ORDER BY 
         articles.id DESC 
-        LIMIT ?, ?`;
+    LIMIT ?, ?`;
         const [result] = await query(sql, [alias, ((page - 1) * pageSize), Number(pageSize)]);
         // 获取分类下的所有文章的总数
         const sql1 = `SELECT COUNT(*) AS total FROM articles WHERE category_id = ?`;
