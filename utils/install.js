@@ -336,6 +336,21 @@ const createTables = async (req, res) => {
           ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;`)
         console.log('创建 carousel 表成功');
 
+        console.log('开始创建api_logs表');
+        // api_logs 表用于记录接口请求日志,包含 接口ip，接口地址，接口参数，接口返回值，接口请求时间，接口请求耗时，接口请求状态，访问时间等信息
+        await query(`CREATE TABLE IF NOT EXISTS ${DB_ROOT}.api_logs  (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            ip varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+            url varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+            params text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+            result text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+            create_time bigint(20) NOT NULL,
+            use_time float(10, 3) NOT NULL,
+            status int(11) NOT NULL,
+            access_time bigint(20) NOT NULL,
+            PRIMARY KEY (id) USING BTREE
+          ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;`)
+        console.log('创建 api_logs 表成功');
 
         // 创建install.lock文件，表示项目已安装
         fs.writeFileSync(installLock, 'lock');

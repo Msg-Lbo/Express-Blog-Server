@@ -1,4 +1,6 @@
 const mysql = require('mysql2/promise');
+const dotenv = require("dotenv")
+dotenv.config()
 const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_ROOT } = process.env
 // 创建数据库连接池
 const pool = mysql.createPool({

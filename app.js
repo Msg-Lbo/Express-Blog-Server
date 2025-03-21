@@ -1,4 +1,5 @@
 const express = require('express');
+const apiLogger = require('./utils/logMiddleware');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -25,6 +26,7 @@ app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.json());
+app.use(apiLogger);
 const upload = multer({
     dest: './public/uploads/temp',
 });
