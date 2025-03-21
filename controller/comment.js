@@ -1,10 +1,12 @@
 const jwt = require("jsonwebtoken");
 const query = require('../db');
 const { TOKEN_SECRET } = process.env
+const sendEmail = require('../utils/sendEmail');
+
 
 // 发送评论
 exports.sendComment = async (req, res) => {
-    const { article_id, content, create_time, parent_id, nickname, email, identity, code } = req.body;
+    const { article_id, content, create_time, parent_id, nickname, email, identity, code, reply_email } = req.body;
     if (!article_id || !content || !create_time || !parent_id || !nickname || !email || !code) {
         console.log(req.body);
 
@@ -33,8 +35,8 @@ exports.sendComment = async (req, res) => {
             }
         }
 
-        // 验证码小写
-        let lowerCaseCode = code.toLowerCase();
+        // 验证验证码是否正确
+        const lowerCaseCode = code.toLowerCase();
         // 判断验证码是否正确
         if (req.session.captcha !== lowerCaseCode) {
             return res.json({
@@ -50,9 +52,12 @@ exports.sendComment = async (req, res) => {
                 // 查询管理员邮箱
                 const [admin] = await query('select email from user where identity = ?', ['admin']);
                 if (admin.length > 0) {
-                    const sendEmail = require('../utils/sendEmail');
                     sendEmail(admin[0].email, '新评论通知', content);
                 }
+            }
+            // 如果有回复者，发送回复通知邮件
+            if (reply_email && reply_email !== email) {
+                sendEmail(reply_email, '评论回复通知', content);
             }
             return res.json({
                 code: 200,
